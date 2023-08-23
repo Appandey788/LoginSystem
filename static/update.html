@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Profile</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/Code-Aditya-14/login-system">Github Repo</a>
+            </li>
+            </ul>
+            <ul class="navbar-nav my-2 my-lg-0">
+                <li class="nav-item my-2 my-sm-0">
+                    <a class="nav-link" href="/profile" id="login-nav"></a>
+                </li>
+                <li class="nav-item mr-sm-2">
+                    <a class="nav-link" href="/signup" id="Signup-nav">Sign up</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container container-2">
+        <h1>Update Profile</h1>
+        <form id="update">
+            <div class="box">
+                <span class="holder">Name:</span><br><input type="text" autocomplete="off" id="name"/>
+            </div>
+            <span class="warning" id="0"></span>
+            <div class="box">
+                <span class="holder">Email:</span><br><input type="email" autocomplete="off" id="email"/>
+            </div>
+            <span class="warning" id="1"></span>
+            <div class="box">
+                <span class="holder">Old Password <span class="required">*</span> : </span><br><input type="password" autocomplete="off" id="opassword" required/>
+            </div>
+            <span class="warning" id="2"></span>
+            <div class="box">
+                <span class="holder">New Password:</span><br><input type="password" autocomplete="off" id="npassword"/>
+            </div>
+            <span class="warning" id="3"></span>
+            <div class="box">
+                <span class="holder">Confirm New Password:</span><br><input type="password" autocomplete="off" id="cpassword"/>
+            </div>
+            <span class="warning" id="4"></span>
+            <div>
+                <input class="btn" type="submit" value="Save Changes"/>
+            </div>
+        </form>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script>
+        validate()
+        document.getElementById('login-nav').innerHTML=localStorage.getItem('name')
+        async function validate() {
+            const token = localStorage.getItem('token')
+            const result = await fetch('/api/reval', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    token: token
+                })
+            }).then((res) => res.json())
+            if (result.status === 'ok') {
+                const user=document.getElementById('login-nav')
+                const logout=document.getElementById('Signup-nav')
+                user.innerHTML=localStorage.getItem('name')
+                user.setAttribute('href', '/profile')
+                logout.innerHTML="Logout"
+                logout.setAttribute('href', "/logout")
+            } else {
+                alert('Need to login to access this page')
+                localStorage.setItem('token', '')
+                localStorage.setItem('name', '')
+                window.location='/'
+            }
+        }
+        const form = document.getElementById('update')
+        form.addEventListener('submit', update)
+        async function update(event) {
+            event.preventDefault()
+            const name = document.getElementById('name').value
+            const email = document.getElementById('email').value
+            const opassword = document.getElementById('opassword').value
+            const npassword = document.getElementById('npassword').value
+            const cpassword = document.getElementById('cpassword').value
+            const token = localStorage.getItem('token')
+            const result = await fetch('/api/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    token: token,
+                    name: name,
+                    email: email,
+                    opassword: opassword,
+                    npassword: npassword,
+                    cpassword: cpassword,
+                    oldName : localStorage.getItem('name')
+                })
+            }).then((res) => res.json())
+            if(result.status === 'ok')
+            {
+                alert('Profile updated successfully')
+                localStorage.setItem('name', result.name)
+                if(result.logout === 'true') {
+                    window.location='/logout'
+                }
+                else { 
+                    window.location='/profile'
+                }
+            }
+            else if(result.idx === '5')
+            {
+                alert(result.error)
+                window.location='/'
+            }
+            else
+            {
+                document.getElementById('0').innerHTML=''
+                document.getElementById('1').innerHTML=''
+                document.getElementById('2').innerHTML=''
+                document.getElementById('3').innerHTML=''
+                document.getElementById('4').innerHTML=''
+                document.getElementById(result.idx).innerHTML=result.error
+                document.getElementById('name').value=''
+                document.getElementById('email').value=''
+                document.getElementById('opassword').value=''
+                document.getElementById('npassword').value=''
+                document.getElementById('cpassword').value=''
+            }
+        }
+    </script>
+</body>
+</html>
